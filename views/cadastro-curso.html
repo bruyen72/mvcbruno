@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cadastrar Curso - Sistema MVC</title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <!-- NAVEGAÇÃO -->
+  <nav class="navbar">
+    <div class="container">
+      <h1 class="logo">Sistema de Cursos</h1>
+      <ul class="nav-links">
+        <li><a href="/cursos">Listar Cursos</a></li>
+        <li><a href="/cursos/novo" class="active">Novo Curso</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- CONTEÚDO PRINCIPAL -->
+  <main class="container">
+    <div class="page-header">
+      <h2>Cadastrar Novo Curso</h2>
+      <p class="subtitle">Preencha os dados do curso abaixo</p>
+    </div>
+
+    <!-- ÁREA DE MENSAGENS -->
+    <div id="mensagem-container" class="alert-container" style="display: none;">
+      <div id="mensagem" class="alert"></div>
+    </div>
+
+    <!-- FORMULÁRIO DE CADASTRO -->
+    <div class="card">
+      <form id="form-curso" novalidate>
+
+        <!-- NOME DO CURSO -->
+        <div class="form-group">
+          <label for="nome" class="required">Nome do Curso</label>
+          <input
+            type="text"
+            id="nome"
+            name="nome"
+            class="form-input"
+            placeholder="Digite o nome do curso"
+            maxlength="120"
+            required
+          >
+          <div class="error-message" id="erro-nome"></div>
+          <small class="hint">Mínimo 3 caracteres, máximo 120</small>
+        </div>
+
+        <!-- DESCRIÇÃO -->
+        <div class="form-group">
+          <label for="descricao">Descrição</label>
+          <textarea
+            id="descricao"
+            name="descricao"
+            class="form-input"
+            rows="4"
+            placeholder="Descreva o conteúdo do curso"
+          ></textarea>
+          <small class="hint">Campo opcional</small>
+        </div>
+
+        <!-- LINHA: PREÇO E CARGA HORÁRIA -->
+        <div class="form-row">
+          <div class="form-group">
+            <label for="preco" class="required">Preço</label>
+            <div class="input-group">
+              <span class="input-prefix">R$</span>
+              <input
+                type="number"
+                id="preco"
+                name="preco"
+                class="form-input with-prefix"
+                placeholder="0.00"
+                step="0.01"
+                min="0"
+                required
+              >
+            </div>
+            <div class="error-message" id="erro-preco"></div>
+            <small class="hint">Valor em reais</small>
+          </div>
+
+          <div class="form-group">
+            <label for="cargaHoraria" class="required">Carga Horária</label>
+            <div class="input-group">
+              <input
+                type="number"
+                id="cargaHoraria"
+                name="cargaHoraria"
+                class="form-input with-suffix"
+                placeholder="0"
+                min="1"
+                required
+              >
+              <span class="input-suffix">horas</span>
+            </div>
+            <div class="error-message" id="erro-cargaHoraria"></div>
+            <small class="hint">Duração total</small>
+          </div>
+        </div>
+
+        <!-- LINHA: CATEGORIA E STATUS -->
+        <div class="form-row">
+          <div class="form-group">
+            <label for="categoria" class="required">Categoria</label>
+            <select id="categoria" name="categoria" class="form-input" required>
+              <option value="">Selecione</option>
+              <option value="Programação">Programação</option>
+              <option value="Banco de Dados">Banco de Dados</option>
+              <option value="Redes">Redes</option>
+              <option value="UX/UI">UX/UI</option>
+              <option value="Outros">Outros</option>
+            </select>
+            <div class="error-message" id="erro-categoria"></div>
+          </div>
+
+          <div class="form-group">
+            <label>Status</label>
+            <div class="switch-container">
+              <label class="switch">
+                <input type="checkbox" id="ativo" name="ativo" checked>
+                <span class="slider"></span>
+              </label>
+              <span class="switch-label">Curso Ativo</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- BOTÕES -->
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" onclick="limparFormulario()">
+            Limpar Formulário
+          </button>
+          <button type="submit" class="btn btn-primary" id="btn-salvar">
+            <span class="btn-text">Salvar Curso</span>
+            <span class="btn-loader" style="display:none;">Salvando...</span>
+          </button>
+        </div>
+
+      </form>
+    </div>
+
+    <!-- LEGENDA -->
+    <div class="form-footer">
+      <span class="required-mark">*</span> Campos obrigatórios
+    </div>
+  </main>
+
+  <!-- RODAPÉ -->
+  <footer class="footer">
+    <p>&copy; 2025 Sistema de Cursos - Desenvolvido por Bruno Ruthes</p>
+  </footer>
+
+  <!-- JAVASCRIPT -->
+  <script>
+    const form = document.getElementById('form-curso');
+    const btnSalvar = document.getElementById('btn-salvar');
+    const btnText = btnSalvar.querySelector('.btn-text');
+    const btnLoader = btnSalvar.querySelector('.btn-loader');
+    const mensagemContainer = document.getElementById('mensagem-container');
+    const mensagemDiv = document.getElementById('mensagem');
+
+    const campos = {
+      nome: document.getElementById('nome'),
+      descricao: document.getElementById('descricao'),
+      preco: document.getElementById('preco'),
+      cargaHoraria: document.getElementById('cargaHoraria'),
+      categoria: document.getElementById('categoria'),
+      ativo: document.getElementById('ativo')
+    };
+
+    // Validação em tempo real
+    campos.nome.addEventListener('blur', () => validarCampo('nome'));
+    campos.preco.addEventListener('blur', () => validarCampo('preco'));
+    campos.cargaHoraria.addEventListener('blur', () => validarCampo('cargaHoraria'));
+    campos.categoria.addEventListener('change', () => validarCampo('categoria'));
+
+    function validarCampo(nomeCampo) {
+      const campo = campos[nomeCampo];
+      const valor = campo.value.trim();
+      let erro = '';
+
+      switch(nomeCampo) {
+        case 'nome':
+          if (!valor) {
+            erro = 'Nome é obrigatório';
+          } else if (valor.length < 3) {
+            erro = 'Nome deve ter no mínimo 3 caracteres';
+          } else if (valor.length > 120) {
+            erro = 'Nome deve ter no máximo 120 caracteres';
+          }
+          break;
+
+        case 'preco':
+          if (!valor) {
+            erro = 'Preço é obrigatório';
+          } else if (isNaN(valor) || parseFloat(valor) < 0) {
+            erro = 'Preço deve ser maior ou igual a 0';
+          }
+          break;
+
+        case 'cargaHoraria':
+          if (!valor) {
+            erro = 'Carga horária é obrigatória';
+          } else if (isNaN(valor) || parseInt(valor) < 1) {
+            erro = 'Carga horária deve ser no mínimo 1 hora';
+          }
+          break;
+
+        case 'categoria':
+          if (!valor) {
+            erro = 'Categoria é obrigatória';
+          }
+          break;
+      }
+
+      mostrarErro(nomeCampo, erro);
+      return erro === '';
+    }
+
+    function mostrarErro(campo, mensagem) {
+      const erroDiv = document.getElementById(`erro-${campo}`);
+      const inputElement = campos[campo];
+
+      if (!erroDiv || !inputElement) {
+        return;
+      }
+
+      if (mensagem) {
+        erroDiv.textContent = mensagem;
+        erroDiv.style.display = 'block';
+        inputElement.classList.add('error');
+      } else {
+        erroDiv.textContent = '';
+        erroDiv.style.display = 'none';
+        inputElement.classList.remove('error');
+      }
+    }
+
+    function limparErros() {
+      ['nome', 'preco', 'cargaHoraria', 'categoria'].forEach(campo => {
+        mostrarErro(campo, '');
+      });
+    }
+
+    function mostrarMensagem(texto, tipo) {
+      mensagemDiv.textContent = texto;
+      mensagemDiv.className = `alert alert-${tipo}`;
+      mensagemContainer.style.display = 'block';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function esconderMensagem() {
+      mensagemContainer.style.display = 'none';
+    }
+
+    function limparFormulario() {
+      form.reset();
+      limparErros();
+      esconderMensagem();
+      campos.nome.focus();
+    }
+
+    // Submit do formulário
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      limparErros();
+      esconderMensagem();
+
+      // Validar campos obrigatórios
+      const camposObrigatorios = ['nome', 'preco', 'cargaHoraria', 'categoria'];
+      let formularioValido = true;
+
+      camposObrigatorios.forEach(campo => {
+        if (!validarCampo(campo)) {
+          formularioValido = false;
+        }
+      });
+
+      if (!formularioValido) {
+        mostrarMensagem('Por favor, corrija os erros antes de continuar', 'error');
+        return;
+      }
+
+      // Preparar dados
+      const formData = {
+        nome: campos.nome.value.trim(),
+        descricao: campos.descricao.value.trim(),
+        preco: parseFloat(campos.preco.value),
+        cargaHoraria: parseInt(campos.cargaHoraria.value),
+        categoria: campos.categoria.value,
+        ativo: campos.ativo.checked
+      };
+
+      // Desabilitar botão
+      btnSalvar.disabled = true;
+      btnText.style.display = 'none';
+      btnLoader.style.display = 'inline';
+
+      try {
+        const response = await fetch('/cursos', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData)
+        });
+
+        const resultado = await response.json();
+
+        if (response.ok && resultado.sucesso) {
+          mostrarMensagem('Curso cadastrado com sucesso! Redirecionando...', 'success');
+          setTimeout(() => {
+            window.location.href = '/cursos';
+          }, 1500);
+        } else {
+          if (resultado.erros && resultado.erros.length > 0) {
+            resultado.erros.forEach(erro => {
+              mostrarErro(erro.campo, erro.mensagem);
+            });
+          }
+          mostrarMensagem(resultado.mensagem || 'Erro ao cadastrar curso', 'error');
+
+          btnSalvar.disabled = false;
+          btnText.style.display = 'inline';
+          btnLoader.style.display = 'none';
+        }
+
+      } catch (erro) {
+        console.error('Erro:', erro);
+        mostrarMensagem('Erro ao conectar com o servidor', 'error');
+
+        btnSalvar.disabled = false;
+        btnText.style.display = 'inline';
+        btnLoader.style.display = 'none';
+      }
+    });
+
+    // Focar no primeiro campo
+    window.addEventListener('load', () => {
+      campos.nome.focus();
+    });
+  </script>
+</body>
+</html>

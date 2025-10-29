@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lista de Cursos - Sistema MVC</title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <!-- NAVEGAÇÃO -->
+  <nav class="navbar">
+    <div class="container">
+      <h1 class="logo">Sistema de Cursos</h1>
+      <ul class="nav-links">
+        <li><a href="/cursos" class="active">Listar Cursos</a></li>
+        <li><a href="/cursos/novo">Novo Curso</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- CONTEÚDO PRINCIPAL -->
+  <main class="container">
+    <div class="page-header">
+      <h2>Cursos Cadastrados</h2>
+      <p class="subtitle">Gerencie todos os cursos do sistema</p>
+    </div>
+
+    <!-- ÁREA DE MENSAGENS -->
+    <div id="mensagem-container" class="alert-container" style="display: none;">
+      <div id="mensagem" class="alert"></div>
+    </div>
+
+    <!-- ESTATÍSTICAS -->
+    <div class="stats-container" id="stats-container" style="display: none;">
+      <div class="stat-card">
+        <div class="stat-value" id="total-cursos">0</div>
+        <div class="stat-label">Total de Cursos</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="total-ativos">0</div>
+        <div class="stat-label">Cursos Ativos</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="total-inativos">0</div>
+        <div class="stat-label">Cursos Inativos</div>
+      </div>
+    </div>
+
+    <!-- LISTA DE CURSOS -->
+    <div id="lista-container">
+      <!-- Loading -->
+      <div id="loading" class="loading">
+        <div class="spinner"></div>
+        <p>Carregando cursos...</p>
+      </div>
+
+      <!-- Lista vazia -->
+      <div id="lista-vazia" class="empty-state" style="display: none;">
+        <h3>Nenhum curso cadastrado</h3>
+        <p>Comece cadastrando seu primeiro curso</p>
+        <a href="/cursos/novo" class="btn btn-primary">Cadastrar Primeiro Curso</a>
+      </div>
+
+      <!-- Tabela de cursos -->
+      <div id="tabela-container" class="table-container" style="display: none;">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Nome</th>
+              <th>Categoria</th>
+              <th>Preço</th>
+              <th>Carga Horária</th>
+              <th>Status</th>
+              <th>Cadastrado em</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody id="tabela-cursos">
+            <!-- Cursos serão inseridos aqui -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <!-- RODAPÉ -->
+  <footer class="footer">
+    <p>&copy; 2025 Sistema de Cursos - Desenvolvido por Bruno Ruthes</p>
+  </footer>
+
+  <!-- JAVASCRIPT -->
+  <script>
+    const loading = document.getElementById('loading');
+    const listaVazia = document.getElementById('lista-vazia');
+    const tabelaContainer = document.getElementById('tabela-container');
+    const tabelaCursos = document.getElementById('tabela-cursos');
+    const mensagemContainer = document.getElementById('mensagem-container');
+    const mensagemDiv = document.getElementById('mensagem');
+    const statsContainer = document.getElementById('stats-container');
+
+    window.addEventListener('load', async () => {
+      await carregarCursos();
+    });
+
+    async function carregarCursos() {
+      try {
+        loading.style.display = 'block';
+        listaVazia.style.display = 'none';
+        tabelaContainer.style.display = 'none';
+
+        const response = await fetch('/api/cursos');
+        const dados = await response.json();
+
+        loading.style.display = 'none';
+
+        if (dados.mensagem) {
+          mostrarMensagem(dados.mensagem.texto, dados.mensagem.tipo);
+        }
+
+        if (!dados.cursos || dados.cursos.length === 0) {
+          listaVazia.style.display = 'block';
+          return;
+        }
+
+        mostrarEstatisticas(dados.cursos);
+        renderizarCursos(dados.cursos);
+        tabelaContainer.style.display = 'block';
+
+      } catch (erro) {
+        console.error('Erro:', erro);
+        loading.style.display = 'none';
+        mostrarMensagem('Erro ao carregar cursos', 'error');
+      }
+    }
+
+    function renderizarCursos(cursos) {
+      tabelaCursos.innerHTML = '';
+
+      cursos.forEach(curso => {
+        const linha = document.createElement('tr');
+
+        const statusBadge = curso.ativo
+          ? '<span class="badge badge-success">Ativo</span>'
+          : '<span class="badge badge-danger">Inativo</span>';
+
+        const dataCadastro = formatarData(curso.criadoEm);
+        const precoFormatado = formatarPreco(curso.preco);
+
+        linha.innerHTML = `
+          <td>
+            <strong>${escapeHtml(curso.nome)}</strong>
+            ${curso.descricao ? `<br><small style="color: var(--gray-500);">${escapeHtml(curso.descricao.substring(0, 60))}${curso.descricao.length > 60 ? '...' : ''}</small>` : ''}
+          </td>
+          <td>${escapeHtml(curso.categoria)}</td>
+          <td><strong>${precoFormatado}</strong></td>
+          <td>${curso.cargaHoraria}h</td>
+          <td>${statusBadge}</td>
+          <td>${dataCadastro}</td>
+          <td>
+            <div class="action-buttons">
+              <button class="btn-action" onclick="verDetalhes(${curso.id})" title="Ver detalhes">
+                Ver Detalhes
+              </button>
+              <button class="btn-action" onclick="confirmarExclusao(${curso.id}, '${escapeHtml(curso.nome)}')" title="Desativar">
+                Desativar
+              </button>
+            </div>
+          </td>
+        `;
+
+        tabelaCursos.appendChild(linha);
+      });
+    }
+
+    function mostrarEstatisticas(cursos) {
+      const total = cursos.length;
+      const ativos = cursos.filter(c => c.ativo).length;
+      const inativos = total - ativos;
+
+      document.getElementById('total-cursos').textContent = total;
+      document.getElementById('total-ativos').textContent = ativos;
+      document.getElementById('total-inativos').textContent = inativos;
+
+      statsContainer.style.display = 'grid';
+    }
+
+    function verDetalhes(id) {
+      fetch(`/api/cursos/${id}`)
+        .then(res => res.json())
+        .then(dados => {
+          if (dados.sucesso) {
+            const curso = dados.curso;
+            alert(
+              `DETALHES DO CURSO\n\n` +
+              `Nome: ${curso.nome}\n` +
+              `Descrição: ${curso.descricao || 'Não informada'}\n` +
+              `Categoria: ${curso.categoria}\n` +
+              `Preço: ${formatarPreco(curso.preco)}\n` +
+              `Carga Horária: ${curso.cargaHoraria} horas\n` +
+              `Status: ${curso.ativo ? 'Ativo' : 'Inativo'}\n` +
+              `Cadastrado em: ${formatarData(curso.criadoEm)}`
+            );
+          } else {
+            alert('Curso não encontrado');
+          }
+        })
+        .catch(erro => {
+          console.error('Erro:', erro);
+          alert('Erro ao buscar detalhes do curso');
+        });
+    }
+
+    function confirmarExclusao(id, nome) {
+      const confirmacao = confirm(
+        `Deseja realmente desativar o curso:\n"${nome}"?\n\nEsta ação pode ser revertida.`
+      );
+
+      if (confirmacao) {
+        excluirCurso(id);
+      }
+    }
+
+    async function excluirCurso(id) {
+      try {
+        const response = await fetch(`/api/cursos/${id}`, {
+          method: 'DELETE'
+        });
+
+        const resultado = await response.json();
+
+        if (resultado.sucesso) {
+          mostrarMensagem('Curso desativado com sucesso', 'success');
+          setTimeout(() => {
+            carregarCursos();
+          }, 1000);
+        } else {
+          mostrarMensagem('Erro ao desativar curso', 'error');
+        }
+
+      } catch (erro) {
+        console.error('Erro:', erro);
+        mostrarMensagem('Erro ao desativar curso', 'error');
+      }
+    }
+
+    function mostrarMensagem(texto, tipo) {
+      mensagemDiv.textContent = texto;
+      mensagemDiv.className = `alert alert-${tipo}`;
+      mensagemContainer.style.display = 'block';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+
+      setTimeout(() => {
+        mensagemContainer.style.display = 'none';
+      }, 5000);
+    }
+
+    function formatarData(dataString) {
+      if (!dataString) return 'N/A';
+      const data = new Date(dataString);
+      return data.toLocaleDateString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    }
+
+    function formatarPreco(valor) {
+      return new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL'
+      }).format(valor);
+    }
+
+    function escapeHtml(text) {
+      const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+      };
+      return text.replace(/[&<>"']/g, m => map[m]);
+    }
+  </script>
+</body>
+</html>
