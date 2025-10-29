@@ -30,11 +30,11 @@ Também é possível **visualizar** todos os cursos e **desativar** quando neces
 
 ## 🧩 Tecnologias Utilizadas
 
-- **Node.js** – Ambiente de execução JavaScript  
-- **Express** – Framework web para Node.js  
-- **SQLite** – Banco de dados relacional leve  
-- **HTML5** – Estrutura das páginas  
-- **CSS3** – Estilização da interface  
+- **Node.js** – Ambiente de execução JavaScript
+- **Express** – Framework web para Node.js
+- **SQLite** – Banco de dados relacional leve
+- **HTML5** – Estrutura das páginas
+- **CSS3** – Estilização da interface
 - **JavaScript** – Interatividade no frontend  
 
 ---
@@ -43,10 +43,10 @@ Também é possível **visualizar** todos os cursos e **desativar** quando neces
 
 O projeto segue o padrão **MVC**, dividindo responsabilidades em:
 
-- **Model:** Entidade `Curso` e regras de validação  
-- **Repository:** Acesso ao banco SQLite  
-- **Service:** Lógica de negócio  
-- **Controller:** Requisições HTTP e integração  
+- **Model:** Entidade `Curso` e regras de validação
+- **Repository:** Acesso ao banco SQLite
+- **Service:** Lógica de negócio
+- **Controller:** Requisições HTTP e integração
 - **View:** Páginas HTML com CSS responsivo  
 
 ---
@@ -63,3 +63,6 @@ mvcbruno/
 ├── public/css/          # Arquivos de estilo
 ├── database/            # Banco SQLite
 └── server.js            # Servidor principal
+
+
+digite "npm install" depois começa "npm start" = 🌐 Acesse: http://localhost:3000  
