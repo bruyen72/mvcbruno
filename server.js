@@ -33,7 +33,7 @@ app.use(session({
 }));
 
 // Servir arquivos estáticos (CSS, JS, imagens)
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.resolve(__dirname, 'public')));
 
 // Middleware de logging (para debug)
 app.use((req, res, next) => {

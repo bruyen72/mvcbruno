@@ -22,7 +22,7 @@ class CursoController {
       const categorias = this.service.obterCategorias();
 
       // Envia a view do formulário
-      res.sendFile(path.join(__dirname, '..', 'views', 'cadastro-curso.html'));
+      res.sendFile(path.resolve(__dirname, '..', 'views', 'cadastro-curso.html'));
 
     } catch (erro) {
       console.error('❌ Erro ao exibir formulário:', erro);
@@ -114,7 +114,7 @@ class CursoController {
 
       // 3. Enviar página HTML
       // (A página fará uma requisição AJAX para /api/cursos para buscar os dados)
-      res.sendFile(path.join(__dirname, '..', 'views', 'lista-cursos.html'));
+      res.sendFile(path.resolve(__dirname, '..', 'views', 'lista-cursos.html'));
 
     } catch (erro) {
       console.error('❌ Erro ao listar cursos:', erro);
